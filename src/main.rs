@@ -1,10 +1,16 @@
-use poloto::{prelude::*, plotnum::{HasDefaultTicks, PlotNum}};
 use serde_json::Value;
-use std::{fs::File, io::{BufReader, self, Write}, collections::{hash_map::Entry, HashMap}};
+use std::{
+    collections::{HashMap},
+    fs::File,
+    io::{BufReader, Write},
+};
 
 fn main() {
-    // .json found at ./data.json
-    let file = File::open("test_data.json").unwrap();
+    //let file = File::open("test_data.json").unwrap();
+    let file_to_open = std::env::args().nth(1).expect("Could not open input json!");
+    let file = File::open(file_to_open.clone()).unwrap();
+    // input file with file extension replaced with .svg
+    let svg = format!("{}{}", file_to_open.trim_end_matches(".json"), ".svg");
     let reader = BufReader::new(file);
     let json: Value = serde_json::from_reader(reader).unwrap();
 
@@ -45,16 +51,24 @@ fn main() {
     }
 
     // create a plot
-    let data = poloto::data::<i128, i128>()
-        .scatter("", data)
-        .ymarker(0)
-        .xmarker(0)
-        .build();
-    let mut plotter = data.plot(
-        "SysLat Test Graph",
-        "Seconds elapsed",
-        "Latency (in milliseconds)",
-    );
+    let data = poloto::data::<i128, i128>().scatter("", data).ymarker(0).xmarker(0).build();
 
-    print!("{}", poloto::disp(|w| plotter.simple_theme_dark(w)));
+    // edit stepping
+    let (xtick, xtick_fmt) = poloto::steps(data.boundx(), (0..).step_by(500));
+    let (ytick, ytick_fmt) = poloto::steps(data.boundy(), (0..).step_by(15));
+
+    let mut plotter = data.plot_with(
+        xtick,
+        ytick,
+        poloto::plot_fmt("SysLat Test Graph", "Seconds Elapsed", "Latency (in milliseconds)", xtick_fmt, ytick_fmt),
+    );
+    let mut file = File::create(svg.clone()).unwrap();
+    write!(
+        file,
+        "{}<style>{}</style>{}{}",
+        poloto::simple_theme::SVG_HEADER,
+        poloto::simple_theme::STYLE_CONFIG_DARK_DEFAULT,
+        poloto::disp(|w| plotter.render(w)),
+        poloto::simple_theme::SVG_END,
+    ).unwrap();
 }
