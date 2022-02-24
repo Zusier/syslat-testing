@@ -1,6 +1,6 @@
 use poloto::{prelude::*, plotnum::{HasDefaultTicks, PlotNum}};
 use serde_json::Value;
-use std::{fs::File, io::{BufReader, self}, collections::{hash_map::Entry, HashMap}};
+use std::{fs::File, io::{BufReader, self, Write}, collections::{hash_map::Entry, HashMap}};
 
 fn main() {
     // .json found at ./data.json
@@ -36,18 +36,17 @@ fn main() {
     // Easily an outlier, perhaps try and remove if above average by a multiplier
     //println!("Maximum: {}ms", results_vec[results_vec.len() - 1]);
 
+    // build data for plot
     let mut data: HashMap<i128, i128> = HashMap::new();
-    //let data: [(u64, u64); json["AggregateData"].as_object().unwrap().get("SysLatTestCount").unwrap().as_u64().unwrap()];
     let mut count = 0;
     for entry in json["SysLatData"].as_object().unwrap()["SysLatResults"].as_array().unwrap() {
         count += 1;
         data.insert(count, entry.as_i64().unwrap().try_into().unwrap());
     }
 
-    //let data = data.iter().map(|(k, v| (v.0, k.clone())).collect::<Vec<_>>();
-    //let data = data.iter().map(|(k, v)| (v, k.clone())).collect::<Vec<_>>();
+    // create a plot
     let data = poloto::data::<i128, i128>()
-        .histogram("Latency", data)
+        .scatter("", data)
         .ymarker(0)
         .xmarker(0)
         .build();
@@ -58,6 +57,4 @@ fn main() {
     );
 
     print!("{}", poloto::disp(|w| plotter.simple_theme_dark(w)));
-    // write to svg file
-    //io::write::file("test.svg", poloto::disp(|w| plotter.simple_theme_dark(w)));
 }
