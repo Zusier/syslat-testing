@@ -1,6 +1,6 @@
 use serde_json::Value;
 use std::{
-    collections::{HashMap},
+    collections::HashMap,
     fs::File,
     io::{BufReader, Write},
 };
@@ -25,7 +25,7 @@ fn main() {
         //println!("{:?}", entry.as_u64().unwrap());
         results_vec.push(entry.as_u64().unwrap());
     }
-    results_vec.sort();
+    results_vec.sort_unstable();
     //results_vec.reverse();
     // calculate 1% percentile lows
     {
@@ -33,14 +33,14 @@ fn main() {
         for result in results_vec.iter() {
             total += *result;
             if total >= results_total / 100 {
-                //println!("1% Low: {}ms", *result);
+                println!("1% Low: {}ms", *result);
                 break;
             }
         }
     }
-    //println!("Average: {}ms", results_total / results_count);
+    println!("Average: {}ms", results_total / results_count);
     // Easily an outlier, perhaps try and remove if above average by a multiplier
-    //println!("Maximum: {}ms", results_vec[results_vec.len() - 1]);
+    println!("Maximum: {}ms", results_vec[results_vec.len() - 1]);
 
     // build data for plot
     let mut data: HashMap<i128, i128> = HashMap::new();
@@ -62,12 +62,13 @@ fn main() {
         ytick,
         poloto::plot_fmt("SysLat Test Graph", "Seconds Elapsed", "Latency (in milliseconds)", xtick_fmt, ytick_fmt),
     );
-    let mut file = File::create(svg.clone()).unwrap();
+    let mut file = File::create(svg).unwrap();
     write!(
         file,
-        "{}<style>{}</style>{}{}",
+        "{}<style>{}{}</style>{}{}",
         poloto::simple_theme::SVG_HEADER,
         poloto::simple_theme::STYLE_CONFIG_DARK_DEFAULT,
+        ".poloto_scatter{stroke-width:3}",
         poloto::disp(|w| plotter.render(w)),
         poloto::simple_theme::SVG_END,
     ).unwrap();
