@@ -1,15 +1,6 @@
 # syslat-testing
 
 
+## To Test
 
-
-
-
-
-
-
-
-
-## To Test/Prove/Debunk
-
-- High power appliances' affect on latency while competing(?) for power
+- tscsyncpolicy
