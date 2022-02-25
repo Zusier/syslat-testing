@@ -6,27 +6,27 @@ use std::{
 };
 
 fn main() {
-    //let file = File::open("test_data.json").unwrap();
-    let file_to_open = std::env::args().nth(1).expect("Could not open input json!");
-    let file = File::open(file_to_open.clone()).unwrap();
+    let file_to_open = std::env::args().nth(1).expect("Could not find any argument!");
+    
+    let file = File::open(file_to_open.clone()).expect("Could not open log file! (is the file path correct?)");
+
     // input file with file extension replaced with .svg
     let svg = format!("{}{}", file_to_open.trim_end_matches(".json"), ".svg");
     let reader = BufReader::new(file);
     let json: Value = serde_json::from_reader(reader).unwrap();
 
-    // Todo: use counts/total from json
     let mut results_vec: Vec<u64> = Vec::new();
 
+    // Gather how many data points were collected
     let results_count = json["AggregateData"].as_object().unwrap().get("SysLatTestCount").unwrap().as_u64().unwrap();
+    // Gather total ms latency from data points
     let results_total = json["AggregateData"].as_object().unwrap().get("SystemLatencyTotal").unwrap().as_u64().unwrap();
-    //const results_count: usize = results_count as usize;
 
     for entry in json["SysLatData"].as_object().unwrap()["SysLatResults"].as_array().unwrap() {
-        //println!("{:?}", entry.as_u64().unwrap());
         results_vec.push(entry.as_u64().unwrap());
     }
     results_vec.sort_unstable();
-    //results_vec.reverse();
+
     // calculate 1% percentile lows
     {
         let mut total = 0;
@@ -53,7 +53,7 @@ fn main() {
     // create a plot
     let data = poloto::data::<i128, i128>().scatter("", data).ymarker(0).xmarker(0).build();
 
-    // edit stepping
+    // edit scatter plot stepping
     let (xtick, xtick_fmt) = poloto::steps(data.boundx(), (0..).step_by(500));
     let (ytick, ytick_fmt) = poloto::steps(data.boundy(), (0..).step_by(15));
 
@@ -62,7 +62,7 @@ fn main() {
         ytick,
         poloto::plot_fmt("SysLat Test Graph", "Seconds Elapsed", "Latency (in milliseconds)", xtick_fmt, ytick_fmt),
     );
-    let mut file = File::create(svg).unwrap();
+    let mut file = File::create(svg).expect("Could not create svg!");
     write!(
         file,
         "{}<style>{}{}</style>{}{}",
@@ -71,5 +71,5 @@ fn main() {
         ".poloto_scatter{stroke-width:3}",
         poloto::disp(|w| plotter.render(w)),
         poloto::simple_theme::SVG_END,
-    ).unwrap();
+    ).expect("Failed to write svg!");
 }
