@@ -22,8 +22,12 @@ fn main() {
     // Gather total ms latency from data points
     let results_total = json["AggregateData"].as_object().unwrap().get("SystemLatencyTotal").unwrap().as_u64().unwrap();
 
+    let mut data: HashMap<i128, i128> = HashMap::new(); // no unsigned ints implemented in poloto crate :(
+    let mut count = 0;
     for entry in json["SysLatData"].as_object().unwrap()["SysLatResults"].as_array().unwrap() {
-        results_vec.push(entry.as_u64().unwrap());
+        count += 1; // increment count for plot timeline
+        data.insert(count, entry.as_u64().unwrap().try_into().unwrap()); // build data for plot
+        results_vec.push(entry.as_u64().unwrap()); // going to sort vector for lows, averages, and highs
     }
     results_vec.sort_unstable();
 
@@ -41,14 +45,6 @@ fn main() {
     println!("Average: {}ms", results_total / results_count);
     // Easily an outlier, perhaps try and remove if above average by a multiplier
     println!("Maximum: {}ms", results_vec[results_vec.len() - 1]);
-
-    // build data for plot
-    let mut data: HashMap<i128, i128> = HashMap::new();
-    let mut count = 0;
-    for entry in json["SysLatData"].as_object().unwrap()["SysLatResults"].as_array().unwrap() {
-        count += 1;
-        data.insert(count, entry.as_i64().unwrap().try_into().unwrap());
-    }
 
     // create a plot
     let data = poloto::data::<i128, i128>().scatter("", data).ymarker(0).xmarker(0).build();
