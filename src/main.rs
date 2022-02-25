@@ -7,7 +7,7 @@ use std::{
 
 fn main() {
     let file_to_open = std::env::args().nth(1).expect("Could not find any argument!");
-    
+
     let file = File::open(file_to_open.clone()).expect("Could not open log file! (is the file path correct?)");
 
     // input file with file extension replaced with .svg
@@ -65,11 +65,12 @@ fn main() {
     let mut file = File::create(svg).expect("Could not create svg!");
     write!(
         file,
-        "{}<style>{}{}</style>{}{}",
+        "{}<style>{}.poloto_scatter{{stroke-width:3}}</style>{}{}",
         poloto::simple_theme::SVG_HEADER,
         poloto::simple_theme::STYLE_CONFIG_DARK_DEFAULT,
-        ".poloto_scatter{stroke-width:3}",
+        //".poloto_scatter{stroke-width:3}",
         poloto::disp(|w| plotter.render(w)),
         poloto::simple_theme::SVG_END,
-    ).expect("Failed to write svg!");
+    )
+    .expect("Failed to write svg!");
 }
