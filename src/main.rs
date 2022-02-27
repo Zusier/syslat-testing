@@ -18,16 +18,24 @@ fn main() {
     let mut results_vec: Vec<u64> = Vec::new();
 
     // Gather how many data points were collected
-    let results_count = json["AggregateData"].as_object().unwrap().get("SysLatTestCount").unwrap().as_u64().unwrap();
+    let mut results_count: usize = 0;
     // Gather total ms latency from data points
-    let results_total = json["AggregateData"].as_object().unwrap().get("SystemLatencyTotal").unwrap().as_u64().unwrap();
+    let mut results_total: u64 = 0;
 
     let mut data: HashMap<i128, i128> = HashMap::new(); // no unsigned ints implemented in poloto crate :(
-    let mut count = 0;
     for entry in json["SysLatData"].as_object().unwrap()["SysLatResults"].as_array().unwrap() {
-        count += 1; // increment count for plot timeline
-        data.insert(count, entry.as_u64().unwrap().try_into().unwrap()); // build data for plot
-        results_vec.push(entry.as_u64().unwrap()); // going to sort vector for lows, averages, and highs
+        #[allow(clippy::if_same_then_else)]
+        if results_vec.len() <= 2 {
+            results_count += 1; // increment count for plot timeline
+            results_total += entry.as_u64().unwrap(); // add to total for plot timeline
+            data.insert(results_count.try_into().unwrap(), entry.as_u64().unwrap().try_into().unwrap()); // build data for plot
+            results_vec.push(entry.as_u64().unwrap()); // going to sort vector for lows, averages, and highs
+        } else if entry.as_u64().unwrap() <= (results_vec[results_count - 1]) * 4 { // if data point is 4 times higher than last data point, do not add
+            results_count += 1;
+            results_total += entry.as_u64().unwrap();
+            data.insert(results_count.try_into().unwrap(), entry.as_u64().unwrap().try_into().unwrap());
+            results_vec.push(entry.as_u64().unwrap());
+        }
     }
     results_vec.sort_unstable();
 
@@ -42,16 +50,16 @@ fn main() {
             }
         }
     }
-    println!("Average: {}ms", results_total / results_count);
+    println!("Average: {}ms", results_total / results_count as u64);
     // Easily an outlier, perhaps try and remove if above average by a multiplier
     println!("Maximum: {}ms", results_vec[results_vec.len() - 1]);
 
     // create a plot
-    let data = poloto::data::<i128, i128>().scatter("", data).ymarker(0).xmarker(0).build();
+    let data = poloto::data::<i128, i128>().scatter("", data).ymarker(5).xmarker(0).build();
 
     // edit scatter plot stepping
     let (xtick, xtick_fmt) = poloto::steps(data.boundx(), (0..).step_by(500));
-    let (ytick, ytick_fmt) = poloto::steps(data.boundy(), (0..).step_by(15));
+    let (ytick, ytick_fmt) = poloto::steps(data.boundy(), (5..).step_by((results_vec[results_vec.len() - 1] / 10).try_into().unwrap())); // step by 10% of max
 
     let mut plotter = data.plot_with(
         xtick,
