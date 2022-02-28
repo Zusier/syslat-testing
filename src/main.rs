@@ -1,3 +1,5 @@
+// Todo:
+// Split common stuff into functions (not much, which is why it's all under main)
 use serde_json::Value;
 use std::{
     collections::HashMap,
@@ -26,6 +28,8 @@ fn main() {
     for entry in json["SysLatData"].as_object().unwrap()["SysLatResults"].as_array().unwrap() {
         let e_u64: u64 = entry.as_u64().unwrap();
         #[allow(clippy::if_same_then_else)]
+        // Have to process first two entries for the outlier removal to work
+        // this is actually faster compared to running the first two entries separately and not having if statements
         if results_vec.len() <= 2 {
             results_count += 1; // increment count for plot timeline
             results_total += e_u64; // add to total for plot timeline
@@ -42,11 +46,11 @@ fn main() {
 
     // calculate 1% percentile lows
     {
-        let mut total = 0;
+        let mut total: u64 = 0;
         for result in results_vec.iter() {
-            total += *result;
+            total += result;
             if total >= results_total / 100 {
-                println!("1% Low: {}ms", *result);
+                println!("1% Low: {}ms", result);
                 break;
             }
         }
