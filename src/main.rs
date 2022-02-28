@@ -24,17 +24,18 @@ fn main() {
 
     let mut data: HashMap<i128, i128> = HashMap::new(); // no unsigned ints implemented in poloto crate :(
     for entry in json["SysLatData"].as_object().unwrap()["SysLatResults"].as_array().unwrap() {
+        let e_u64: u64 = entry.as_u64().unwrap();
         #[allow(clippy::if_same_then_else)]
         if results_vec.len() <= 2 {
             results_count += 1; // increment count for plot timeline
-            results_total += entry.as_u64().unwrap(); // add to total for plot timeline
-            data.insert(results_count.try_into().unwrap(), entry.as_u64().unwrap().try_into().unwrap()); // build data for plot
-            results_vec.push(entry.as_u64().unwrap()); // going to sort vector for lows, averages, and highs
-        } else if entry.as_u64().unwrap() <= (results_vec[results_count - 1]) * 4 { // if data point is 4 times higher than last data point, do not add
+            results_total += e_u64; // add to total for plot timeline
+            data.insert(results_count as i128, e_u64 as i128); // build data for plot
+            results_vec.push(e_u64); // going to sort vector for lows, averages, and highs
+        } else if e_u64 <= (results_vec[results_count - 1]) * 4 { // if data point is 4 times higher than last data point, do not add
             results_count += 1;
-            results_total += entry.as_u64().unwrap();
-            data.insert(results_count.try_into().unwrap(), entry.as_u64().unwrap().try_into().unwrap());
-            results_vec.push(entry.as_u64().unwrap());
+            results_total += e_u64;
+            data.insert(results_count as i128, e_u64 as i128);
+            results_vec.push(e_u64);
         }
     }
     results_vec.sort_unstable();
