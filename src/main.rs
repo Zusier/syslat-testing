@@ -4,7 +4,7 @@ use serde_json::Value;
 use std::{
     collections::HashMap,
     fs::File,
-    io::{BufReader},
+    io::{BufReader, Write},
 };
 
 fn main() {
