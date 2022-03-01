@@ -14,8 +14,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose --release --manifest-path ./Cargo.toml
+    
+    - uses: icepuma/rust-action@master
+      with: 
+        args: cargo build --release
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.3.1
       with:
