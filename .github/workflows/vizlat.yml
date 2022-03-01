@@ -14,8 +14,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose --release --manifest-path ./Cargo.toml
+    #- name: Build
+    #  run: cargo build --verbose --release --manifest-path ./Cargo.toml
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+    - run: cargo build --release
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.3.1
       with:
