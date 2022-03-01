@@ -18,7 +18,7 @@ jobs:
     #  run: cargo build --verbose --release --manifest-path ./Cargo.toml
     - uses: actions-rs/toolchain@v1
       with:
-        toolchain: stable
+        toolchain: nightly
     - run: cargo build --release
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.3.1

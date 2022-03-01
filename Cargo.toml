@@ -14,4 +14,4 @@ opt-level = 3
 lto = true
 codegen-units = 1
 panic = "abort"
-#strip = true # ci apparently isnt up to date for stable
+strip = true
